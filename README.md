@@ -31,7 +31,6 @@ sudo apt-mark hold nvidia-l4t-kernel-dtbs nvidia-l4t-kernel-oot-headers nvidia-l
 Install Kernel header file:
 
 ```
-sudo apt-get install nvidia-l4t-kernel-headers
 sudo apt-mark hold nvidia-l4t-kernel nvidia-l4t-kernel-headers
 ```
 
@@ -45,7 +44,6 @@ sudo apt-mark hold nvidia-l4t-rt-kernel-dtbs nvidia-l4t-rt-kernel-oot-headers nv
 Install Real-time Kernel header file:
 
 ```
-sudo apt-get install nvidia-l4t-rt-kernel-headers
 sudo apt-mark hold nvidia-l4t-rt-kernel nvidia-l4t-rt-kernel-headers
 ```
 
