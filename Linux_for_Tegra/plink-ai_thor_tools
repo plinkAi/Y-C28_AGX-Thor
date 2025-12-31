@@ -1,0 +1,106 @@
+#!/bin/bash
+
+LDK_DIR=$(cd $(dirname $0) && pwd)
+LDK_ROOTFS_DIR="${LDK_DIR}/rootfs"
+FIND_ROOT_OPTS="-user root -group root"
+PLINK_TOOLS_DIR="${LDK_DIR}/kernel/plink-tools"
+INSTALL_ROOT_OPTS="--owner=root --group=root"
+
+usage() {
+        echo "Usage: $0 {general|real-time}"
+        echo "Please specify the kernel to be used:"
+        echo "  general         - General kernel"
+        echo "  real-time       - Real-time kernel"
+        exit 1
+}
+
+# General kernel or real-time kernel
+if [ $# -eq 0 ]; then
+        usage
+fi
+
+case $1 in
+        general)
+                EXTLINUX_FILE_DIR="${PLINK_TOOLS_DIR}/scripts/extlinux"
+                ;;
+        real-time)
+                EXTLINUX_FILE_DIR="${PLINK_TOOLS_DIR}/scripts/extlinux-rt"
+		L4T_APT_SOURCE_FILE="${LDK_ROOTFS_DIR}/etc/apt/sources.list.d/nvidia-l4t-apt-source.list"
+		if ! grep -q "rt-kernel" "${L4T_APT_SOURCE_FILE}"; then
+			echo "deb https://repo.download.nvidia.com/jetson/rt-kernel r38.2 main" >> ${L4T_APT_SOURCE_FILE}
+		fi
+                ;;
+        *)
+                usage
+                ;;
+esac
+
+# Check if rootfs is extracted
+if [ ! $(find "$LDK_ROOTFS_DIR/etc/passwd" ${FIND_ROOT_OPTS} 2>/dev/null) ]; then
+        echo "||||||||||||||||||||||| ERROR |||||||||||||||||||||||"
+        echo "-----------------------------------------------------"
+        echo "1. The root filesystem, provided with this package,"
+        echo "   has to be extracted to this directory:"
+        echo "   ${LDK_ROOTFS_DIR}"
+        echo "-----------------------------------------------------"
+        echo "2. The root filesystem, provided with this package,"
+        echo "   has to be extracted with 'sudo' to this directory:"
+        echo "   ${LDK_ROOTFS_DIR}"
+        echo "3. Or you can re-run this script with"
+        echo "  --rootfs-tar <path_to_rootfs_tarball> parameter."
+        echo "-----------------------------------------------------"
+        echo "Consult the Development Guide for instructions on"
+        echo "extracting and flashing your device."
+        echo "|||||||||||||||||||||||||||||||||||||||||||||||||||||"
+        exit 1
+fi
+
+# Check whether the installation of the L4T BSP package is completed!
+if [ ! $(find "$LDK_ROOTFS_DIR/lib/modules/6.8.12-tegra/modules.alias" ${FIND_ROOT_OPTS} 2>/dev/null) ]; then
+	echo "|||||||||||||||||||||||||||| ERROR ||||||||||||||||||||||||||||"
+	echo "---------------------------------------------------------------"
+	echo " The kernel header file was not found. Make sure that"
+	echo " the following command is executed succcessfully:"
+	echo "	cd ${LDK_DIR}"
+	echo "	sudo ./apply_binaries.sh"
+	echo "---------------------------------------------------------------"
+	echo " L4T BSP package installation completed!"
+	echo " Disabling NetworkManager-wait-online.service"
+	echo " Disable the ondemand service by changing the runlevels to 'K'"
+	echo " Success!"
+        echo "|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+	exit 1
+fi
+
+# Enable usb firmware
+if [ ! $(find "$LDK_ROOTFS_DIR/lib/firmware/renesas_usb_fw.mem" ${FIND_ROOT_OPTS} 2>/dev/null) ]; then
+	echo "Install plink-ai's firmware"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/renesas_usb_fw.mem" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-8265-34.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-8265-36.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-cc-a0-50.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-cc-a0-77.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-59.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-66.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-72.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-73.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-74.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-77.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-78.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-79.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0-86.ucode" "${LDK_ROOTFS_DIR}/lib/firmware/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/firmwares/iwlwifi-ty-a0-gf-a0.pnvm" "${LDK_ROOTFS_DIR}/lib/firmware/"
+fi
+
+if [ ! $(find "$LDK_ROOTFS_DIR/boot/plink/y-c28-agx-thor-382-t5000.dtb" ${FIND_ROOT_OPTS} 2>/dev/null) ]; then
+	echo "Plink-ai's carrier board driver to target rootfs";
+	mkdir -p "${LDK_ROOTFS_DIR}/boot/plink/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${LDK_DIR}/kernel/dtb/y-c28-agx-thor-3821-t5000.dtb" "${LDK_ROOTFS_DIR}/boot/plink/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${LDK_DIR}/kernel/dtb/y-c28-agx-thor-3821-t5000-ipc.dtb" "${LDK_ROOTFS_DIR}/boot/plink/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${LDK_DIR}/kernel/dtb/y-c28-agx-thor-3821-t5000-ipc-sfp.dtb" "${LDK_ROOTFS_DIR}/boot/plink/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${EXTLINUX_FILE_DIR}/extlinux.conf" "${LDK_ROOTFS_DIR}/boot/extlinux/"
+	install ${INSTALL_ROOT_OPTS} --mode=644 -D "${PLINK_TOOLS_DIR}/scripts/extlinux.conf-bak" "${LDK_ROOTFS_DIR}/boot/extlinux/"
+fi
+
+echo "Success!"
+
